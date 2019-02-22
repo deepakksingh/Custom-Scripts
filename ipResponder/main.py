@@ -15,7 +15,7 @@ def getHostIP():
     if(retVal == ' '):
         retVal = cfg.HOSTNOTCONNECTED
         
-    return retVal.decode('utf-8')
+    return retVal.decode('utf-8')[:-2]
 
 #IPVal = getHostIP().decode('utf-8')
 #print(IPVal)
@@ -23,6 +23,7 @@ def getHostIP():
 def getStoredIP():
     f = open(cfg.dataFile,'r')
     line = f.readline()
+    line = line[:-1]
     print(line)
     f.close()
     
@@ -39,21 +40,63 @@ def runnerFunc():
 
 def getDestinationAddress():
     return cfg.DESTINATION_EMAIL
+
+def checkValidity(currIP):
+    
+    send=True
+    dontSend=False
+    
+    storedIP = getStoredIP()
+    
+    if storedIP == currIP:
+        return currIP,dontSend
+    
+    elif currIP == " " :
+        #store NO-IP in data file
+        f = open('./data','w+')
+        f.write(cfg.IPMISSINGKW)    
+        f.close()
+        
+        return cfg.IPMISSINGKW,send
+    
+    elif storedIP == cfg.IPMISSINGKW and currIP != " ":
+        f = open('./data','w+')
+        f.write(currIP)    
+        f.close()
+        
+        return currIP,send
+    
+    elif storedIP == cfg.IPMISSINGKW and currIP == " ":
+        f = open('./data','w+')
+        f.write(currIP)    
+        f.close()
+        
+        return cfg.IPMISSINGKW,send
+    
+    return currIP,send
+            
+        
+    
+    
         
 def sender():
     currIPVal = getHostIP()
-    hostnameVal = subprocess.check_output(['hostname'])
-    hostnameVal = hostnameVal.decode("utf-8")
-    #prepare and send the mail
-    destEmail = getDestinationAddress()
     
-    emailContent = 'The current IP of '+hostnameVal+' is '+currIPVal
+    IPVal,isValid = checkValidity(currIPVal)
     
-    emailObj = {}
-    emailObj['destEmail']=destEmail
-    emailObj['emailContent']=emailContent
-    
-    sendEmail(emailObj)
+    if isValid:
+        hostnameVal = subprocess.check_output(['hostname'])
+        hostnameVal = hostnameVal.decode("utf-8")
+        #prepare and send the mail
+        destEmail = getDestinationAddress()
+        
+        emailContent = 'The current IP of '+hostnameVal+' is '+IPVal
+        
+        emailObj = {}
+        emailObj['destEmail']=destEmail
+        emailObj['emailContent']=emailContent
+        
+        sendEmail(emailObj)
     
 def createFile(emailObj):
     f = open('./mailData.txt','w')
@@ -66,6 +109,6 @@ def sendEmail(emailObj):
     #subprocess.call(['ssmtp',emailObj['destEmail'],'<','mailData.txt'])
     os.system('ssmtp '+emailObj['destEmail']+' < ./mailData.txt')
     
-#sender()
+sender()
 
     
