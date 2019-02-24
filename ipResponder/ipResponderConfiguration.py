@@ -1,4 +1,4 @@
-dataFile = './data'
+dataFile = '/home/deepak/ws/Custom-Scripts/ipResponder/data'
 
 DESTINATION_EMAIL = ' be.cse.deepak@gmail.com'
 

@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+#!/home/deepak/anaconda3/bin/python3.7
+
 """
 Created on Wed Feb 20 23:05:16 2019
 
@@ -23,8 +23,8 @@ def getHostIP():
 def getStoredIP():
     f = open(cfg.dataFile,'r')
     line = f.readline()
-    line = line[:-1]
-    print(line)
+    #line = line[:-1]
+    #print(line)
     f.close()
     
     return line
@@ -41,48 +41,37 @@ def runnerFunc():
 def getDestinationAddress():
     return cfg.DESTINATION_EMAIL
 
-def checkValidity(currIP):
+def updateDataFile(content):
+    f = open('./data','w+')
+    f.write(content)    
+    f.close()
+
+def checkValidity(currIP,storedIP):
     
     send=True
     dontSend=False
     
-    storedIP = getStoredIP()
-    
-    if storedIP == currIP:
+    if currIP == " ":
+        updateDataFile(cfg.IPMISSINGKW)
         return currIP,dontSend
     
-    elif currIP == " " :
-        #store NO-IP in data file
-        f = open('./data','w+')
-        f.write(cfg.IPMISSINGKW)    
-        f.close()
+    else:
+        if storedIP == cfg.IPMISSINGKW:
+            updateDataFile(currIP)
+            return currIP,send
         
-        return cfg.IPMISSINGKW,send
-    
-    elif storedIP == cfg.IPMISSINGKW and currIP != " ":
-        f = open('./data','w+')
-        f.write(currIP)    
-        f.close()
+        if storedIP == currIP:
+            return currIP,dontSend
         
-        return currIP,send
-    
-    elif storedIP == cfg.IPMISSINGKW and currIP == " ":
-        f = open('./data','w+')
-        f.write(currIP)    
-        f.close()
-        
-        return cfg.IPMISSINGKW,send
-    
-    return currIP,send
-            
-        
-    
-    
+        if storedIP != currIP:
+            updateDataFile(currIP)
+            return currIP,send
+
         
 def sender():
     currIPVal = getHostIP()
-    
-    IPVal,isValid = checkValidity(currIPVal)
+    storedIPVal= getStoredIP()
+    IPVal,isValid = checkValidity(currIPVal,storedIPVal)
     
     if isValid:
         hostnameVal = subprocess.check_output(['hostname'])
@@ -98,14 +87,13 @@ def sender():
         
         sendEmail(emailObj)
     
-def createFile(emailObj):
+def createEmailFile(emailObj):
     f = open('./mailData.txt','w')
     f.write(emailObj['emailContent'])    
     f.close()
  
 def sendEmail(emailObj):
-    
-    createFile(emailObj)
+    createEmailFile(emailObj)
     #subprocess.call(['ssmtp',emailObj['destEmail'],'<','mailData.txt'])
     os.system('ssmtp '+emailObj['destEmail']+' < ./mailData.txt')
     
