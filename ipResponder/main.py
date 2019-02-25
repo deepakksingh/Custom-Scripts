@@ -12,10 +12,13 @@ import ipResponderConfiguration as cfg
 
 def getHostIP():
     retVal = subprocess.check_output(['hostname','-I'])
-    if(retVal == ' '):
+    retVal = retVal.decode('utf-8')
+    print(retVal)
+    if(len(retVal) == 1):
         retVal = cfg.HOSTNOTCONNECTED
+        return retVal
         
-    return retVal.decode('utf-8')[:-2]
+    return retVal[:-2]
 
 #IPVal = getHostIP().decode('utf-8')
 #print(IPVal)
@@ -51,7 +54,7 @@ def checkValidity(currIP,storedIP):
     send=True
     dontSend=False
     
-    if currIP == " ":
+    if currIP == cfg.HOSTNOTCONNECTED:
         updateDataFile(cfg.IPMISSINGKW)
         return currIP,dontSend
     
